@@ -37,6 +37,8 @@ String potNameStr    = "Potentiometer"; // Warning you must change the potentiom
 String motorSpeedStr = "DC Motor Speed";
 String slotSensorStr = "Slot Sensor";
 String buttonStr     = "Push Button";
+String bendyStr      = "Bendi Boi";
+String distStr       = "IR Distance";
 
 // Positions of each of the UI elements
 PVector potPos     = new PVector(100, 50);
@@ -44,10 +46,10 @@ PVector slotPos    = new PVector( 50, 250);
 PVector buttonPos  = new PVector( 50, 350);
 PVector dcMotorPos = new PVector( 50, 50);
 PVector dcInPos    = new PVector( 50, 650);
-PVector bendyPos   = new PVector(300, 50);
+PVector bendyPos   = new PVector(543, 50);
 PVector stepperPos = new PVector(640, 360);
 PVector stepperIn  = new PVector(543, 180);
-PVector distPos    = new PVector(600, 50);
+PVector distPos    = new PVector(950, 50);
 PVector servoPos   = new PVector(600, 640);
 PVector servoIn    = new PVector(600, 640);
 
@@ -68,6 +70,7 @@ void setup () {
     .setDragDirection(Knob.VERTICAL)
     .setConstrained(false)
     ;
+  cp5.getController(potNameStr).lock();
   PFont font = createFont("arial", 20);
   cp5.addTextfield(stepperInStr)
     .setPosition(stepperIn.x, stepperIn.y)
@@ -90,6 +93,29 @@ void setup () {
     .setPosition(buttonPos.x, buttonPos.y)
     .setSize(int(textBoxSize.x), int(textBoxSize.y))
     .updateSize();
+       
+  // add a horizontal slider
+  cp5.addSlider(bendyStr)
+     .setPosition(bendyPos.x,bendyPos.y)
+     .setSize(200,20)
+     .setRange(0,200)
+     .setValue(128)
+     ;
+  // reposition the Label for controller 'slider'
+  cp5.getController(bendyStr).getCaptionLabel().align(ControlP5.LEFT, ControlP5.BOTTOM_OUTSIDE).setPaddingX(0);
+  cp5.getController(bendyStr).getValueLabel().align(ControlP5.RIGHT, ControlP5.BOTTOM_OUTSIDE).setPaddingX(0);
+  cp5.getController(bendyStr).lock();
+  // add a horizontal slider
+  cp5.addSlider(distStr)
+     .setPosition(distPos.x,distPos.y)
+     .setSize(200,20)
+     .setRange(0,200)
+     .setValue(128)
+     ;
+  // reposition the Label for controller 'slider'
+  cp5.getController(distStr).getCaptionLabel().align(ControlP5.LEFT, ControlP5.BOTTOM_OUTSIDE).setPaddingX(0);
+  cp5.getController(distStr).getValueLabel().align(ControlP5.RIGHT, ControlP5.BOTTOM_OUTSIDE).setPaddingX(0);
+  cp5.getController(distStr).lock();
   // Initialize Polar Plot Variables
   list = new LinkedList<PVector>();
   stepperTheta = 0;
@@ -106,7 +132,7 @@ void setup () {
 }
 
 void draw () {
-
+  
   //text(cp5.get(Textfield.class,slotSensorStr).getText(), 360,130);
   //text(cp5.get(Textfield.class,motorSpeedStr).getText(), 360,130);
 
