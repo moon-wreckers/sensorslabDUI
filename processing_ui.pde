@@ -8,14 +8,18 @@ ControlP5 cp5;
 int knobValue = 100;
 
 Knob potKnob;
+Knob servoKnob;
 Serial myPort;        // The serial port
 int xPos = 1;         // horizontal position of the graph
 int xWidth = 1280/5;
 int xHeight = 720/5;
 float inByte = 0;
-boolean settingPotKnob = false;
+boolean settingServoKnob = false;
 int POT_KNOB_MIN = 0;
 int POT_KNOB_MAX = 100;
+int SERVO_KNOB_MIN = 0;
+int SERVO_KNOB_MAX = 179;
+
 int buttonColor;
 
 // Polar Plot Variables
@@ -39,6 +43,7 @@ String slotSensorStr = "Slot Sensor";
 String buttonStr     = "Push Button";
 String bendyStr      = "Bendi Boi";
 String distStr       = "IR Distance";
+String servoStr      = "Servo";
 
 // Positions of each of the UI elements
 PVector potPos     = new PVector(100, 50);
@@ -50,12 +55,13 @@ PVector bendyPos   = new PVector(543, 50);
 PVector stepperPos = new PVector(640, 360);
 PVector stepperIn  = new PVector(543, 180);
 PVector distPos    = new PVector(950, 50);
-PVector servoPos   = new PVector(600, 640);
+PVector servoPos   = new PVector(980, 300);
 PVector servoIn    = new PVector(600, 640);
 
 
 void setup () {
   POT_KNOB_MAX *= 0.6666666f;
+  SERVO_KNOB_MAX *= 0.75f;
   size(1280, 720);
   smooth();
   noStroke();
@@ -71,6 +77,14 @@ void setup () {
     .setConstrained(false)
     ;
   cp5.getController(potNameStr).lock();
+  servoKnob = cp5.addKnob(servoStr)
+    .setRange(SERVO_KNOB_MIN, SERVO_KNOB_MAX)
+    .setValue(int(abs(float(SERVO_KNOB_MAX-SERVO_KNOB_MIN))/2.0))
+    .setPosition(servoPos.x, servoPos.y)
+    .setRadius(50)
+    .setDragDirection(Knob.VERTICAL)
+    .setConstrained(false)
+    ;
   PFont font = createFont("arial", 20);
   cp5.addTextfield(stepperInStr)
     .setPosition(stepperIn.x, stepperIn.y)
@@ -121,12 +135,12 @@ void setup () {
   stepperTheta = 0;
   theta_vel = 0.1;
   lastTime = System.nanoTime();
-  // Uncomment to enable serial to Arduino 
-  /*myPort = new Serial(this, Serial.list()[0], 9600);
+  // Uncomment to enable serial to Arduino
+  myPort = new Serial(this, Serial.list()[0], 9600);
    
    // don't generate a serialEvent() unless you get a newline character:
    myPort.bufferUntil('\n');
-   */
+   
   // set initial background:
   background(0);
 }
@@ -212,6 +226,8 @@ void controlEvent(ControlEvent theEvent) {
       str = str.replaceAll("[^\\d]", "");
       if (!str.equals("")) {
         println(Integer.parseInt(str));
+        str = "a" + String.valueOf(Integer.parseInt(str));
+        myPort.write(str);
       }
     }
   }
@@ -224,7 +240,17 @@ void Potentiometer(int theValue) {
   } else if (theValue < POT_KNOB_MIN) {
     potKnob.setValue(theValue + knobRange);
   }
-  settingPotKnob = true;
+  //println("a knob event. setting background to "+theValue);
+}
+void Servo(int theServoValue) {
+  int knobRealMax = int(1.3333f*float(SERVO_KNOB_MAX));
+  int knobRange = abs(knobRealMax - SERVO_KNOB_MIN);
+  if (knobRealMax < theServoValue) {
+    servoKnob.setValue(theServoValue - knobRange);
+  } else if (theServoValue < SERVO_KNOB_MIN) {
+    servoKnob.setValue(theServoValue + knobRange);
+  }
+  settingServoKnob = true;
   //println("a knob event. setting background to "+theValue);
 }
 void Stepper_Position() {
@@ -233,9 +259,12 @@ void Stepper_Position() {
 void mouseClicked() {
 }
 void mouseReleased() {
-  if (settingPotKnob) {
-    println("Knob Release Value is " + potKnob.getValue());
-    settingPotKnob = false;
+  if (settingServoKnob) {
+    println("Knob Release Value is " + servoKnob.getValue());
+    settingServoKnob = false;
+    
+    String outString = "a" + String.valueOf(servoKnob.getValue());
+    myPort.write(outString);
   }
 }
 
