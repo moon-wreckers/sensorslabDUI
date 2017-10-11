@@ -45,13 +45,15 @@ int knobValue = 100;
 Knob myKnobA;
 Serial myPort;        // The serial port
 int xPos = 1;         // horizontal position of the graph
+int xWidth = 1280/5;
+int xHeight = 720/5;
 float inByte = 0;
-
+boolean settingKnobAValue = false;
 int KNOB_MIN = 0;
 int KNOB_MAX = 100;
 void setup () {
-  KNOB_MAX *= 0.6666666;
-  size(700,400);
+  KNOB_MAX *= 0.6666666f;
+  size(1280,720);
   smooth();
   noStroke();
   
@@ -65,30 +67,34 @@ void setup () {
                .setDragDirection(Knob.VERTICAL)
                .setConstrained(false)
                ;
-                     
-    // List all the available serial ports
-    // if using Processing 2.1 or later, use Serial.printArray()
-    //println(Serial.list());
-
-    // I know that the first port in the serial list on my Mac is always my
-    // Arduino, so I open Serial.list()[0].
-    // Open whatever port is the one you're using.
-    myPort = new Serial(this, Serial.list()[0], 9600);
+  PFont font = createFont("arial",20);
+  cp5.addTextfield("input")
+     .setPosition(300,100)
+     .setSize(200,40)
+     .setFont(font)
+     .setFocus(true)
+     .setColor(color(255,0,0))
+     ;
+     
+    // Uncomment to enable serial to Arduino 
+    /*myPort = new Serial(this, Serial.list()[0], 9600);
 
     // don't generate a serialEvent() unless you get a newline character:
     myPort.bufferUntil('\n');
-
+*/
     // set initial background:
     background(0);
   }
 
 void draw () {
+  
+    //text(cp5.get(Textfield.class,"input").getText(), 360,130);
     // draw the line:
     stroke(127, 34, 255);
-    line(xPos, height, xPos, height - inByte);
+    line(xPos, height, xPos, height - inByte/2);
 
     // at the edge of the screen, go back to the beginning:
-    if (xPos >= width) {
+    if (xPos >= xWidth) {
       xPos = 0;
       background(0);
     } else {
@@ -100,6 +106,20 @@ void draw () {
   //fill(0,100);
   //rect(80,40,140,320);
   }
+  
+// Get string from text box
+void controlEvent(ControlEvent theEvent) {
+  if(theEvent.isAssignableFrom(Textfield.class)) {
+    println("controlEvent: accessing a string from controller '"
+            +theEvent.getName()+"': "
+            +theEvent.getStringValue()
+            );
+    print("Printing int from string: "); 
+    String str = theEvent.getStringValue();
+    str = str.replaceAll("[^\\d]", "");
+    print(Integer.parseInt(str));
+  }
+}
 void knob(int theValue) {
   int knobRealMax = int(1.3333f*float(KNOB_MAX));
   int knobRange = abs(knobRealMax - KNOB_MIN);
@@ -109,9 +129,18 @@ void knob(int theValue) {
   else if (theValue < KNOB_MIN) {
     myKnobA.setValue(theValue + knobRange);
   }
-  println("a knob event. setting background to "+theValue);
+    settingKnobAValue = true;
+  //println("a knob event. setting background to "+theValue);
 }
-
+void mouseClicked() {
+  
+}
+void mouseReleased() {
+  if(settingKnobAValue) {
+    println("Knob Release Value is " + myKnobA.getValue());
+    settingKnobAValue = false;
+  }
+}
 
 void keyPressed() {
   switch(key) {
@@ -129,6 +158,8 @@ void serialEvent (Serial myPort) {
       // convert to an int and map to the screen height:
       inByte = float(inString);
       //println(inByte);
-      inByte = map(inByte, 0, 1023, 0, height);
+      if (!Float.isNaN(inByte)) {
+        inByte = map(inByte, 0, 1023, 0, height);
+      }
     }
   }
