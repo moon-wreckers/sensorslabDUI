@@ -40,7 +40,6 @@ import controlP5.*;
 
 ControlP5 cp5;
 
-int myColorBackground = color(0,0,0);
 int knobValue = 100;
 
 Knob myKnobA;
@@ -48,7 +47,10 @@ Serial myPort;        // The serial port
 int xPos = 1;         // horizontal position of the graph
 float inByte = 0;
 
+int KNOB_MIN = 0;
+int KNOB_MAX = 100;
 void setup () {
+  KNOB_MAX *= 0.6666666;
   size(700,400);
   smooth();
   noStroke();
@@ -56,7 +58,7 @@ void setup () {
   cp5 = new ControlP5(this);
   
   myKnobA = cp5.addKnob("knob")
-               .setRange(0,360)
+               .setRange(KNOB_MIN,KNOB_MAX)
                .setValue(50)
                .setPosition(100,70)
                .setRadius(50)
@@ -93,14 +95,20 @@ void draw () {
       // increment the horizontal position:
       xPos++;
     }
-  background(myColorBackground);
-  fill(knobValue);
-  rect(0,height/2,width,height/2);
-  fill(0,100);
-  rect(80,40,140,320);
+  //fill(knobValue);
+  //rect(0,height/2,width,height/2);
+  //fill(0,100);
+  //rect(80,40,140,320);
   }
 void knob(int theValue) {
-  myColorBackground = color(theValue);
+  int knobRealMax = int(1.3333f*float(KNOB_MAX));
+  int knobRange = abs(knobRealMax - KNOB_MIN);
+  if (knobRealMax < theValue) {
+    myKnobA.setValue(theValue - knobRange);
+  }
+  else if (theValue < KNOB_MIN) {
+    myKnobA.setValue(theValue + knobRange);
+  }
   println("a knob event. setting background to "+theValue);
 }
 
@@ -120,7 +128,7 @@ void serialEvent (Serial myPort) {
       inString = trim(inString);
       // convert to an int and map to the screen height:
       inByte = float(inString);
-      println(inByte);
+      //println(inByte);
       inByte = map(inByte, 0, 1023, 0, height);
     }
   }
