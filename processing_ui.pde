@@ -44,7 +44,6 @@ int myColorBackground = color(0,0,0);
 int knobValue = 100;
 
 Knob myKnobA;
-Knob myKnobB;
 Serial myPort;        // The serial port
 int xPos = 1;         // horizontal position of the graph
 float inByte = 0;
@@ -57,26 +56,14 @@ void setup () {
   cp5 = new ControlP5(this);
   
   myKnobA = cp5.addKnob("knob")
-               .setRange(0,255)
+               .setRange(0,360)
                .setValue(50)
                .setPosition(100,70)
                .setRadius(50)
                .setDragDirection(Knob.VERTICAL)
+               .setConstrained(false)
                ;
                      
-  myKnobB = cp5.addKnob("knobValue")
-               .setRange(0,255)
-               .setValue(220)
-               .setPosition(100,210)
-               .setRadius(50)
-               .setNumberOfTickMarks(10)
-               .setTickMarkLength(4)
-               .snapToTickMarks(true)
-               .setColorForeground(color(255))
-               .setColorBackground(color(0, 160, 100))
-               .setColorActive(color(255,255,0))
-               .setDragDirection(Knob.HORIZONTAL)
-               ;
     // List all the available serial ports
     // if using Processing 2.1 or later, use Serial.printArray()
     //println(Serial.list());
@@ -121,8 +108,6 @@ void knob(int theValue) {
 void keyPressed() {
   switch(key) {
     case('1'):myKnobA.setValue(180);break;
-    case('2'):myKnobB.setConstrained(false).hideTickMarks().snapToTickMarks(false);break;
-    case('3'):myKnobA.shuffle();myKnobB.shuffle();break;
   }
   
 }
