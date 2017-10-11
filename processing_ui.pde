@@ -73,14 +73,12 @@ void setup () {
      .setPosition(stepperIn.x,stepperIn.y)
      .setSize(int(textBoxSize.x),int(textBoxSize.y))
      .setFont(font)
-     .setFocus(true)
      .setColor(color(255,0,0))
      ;
    cp5.addTextfield(motorSpeedStr)
      .setPosition(dcInPos.x,dcInPos.y)
      .setSize(int(textBoxSize.x),int(textBoxSize.y))
      .setFont(font)
-     .setFocus(true)
      .setColor(color(255,0,0))
      ;
    cp5.addButton(slotSensorStr)
