@@ -1,39 +1,3 @@
-/*import processing.serial.*;
-import cc.arduino.*;
-
-Arduino arduino;
-int ledPin = 13;
-
-void setup()
-{
-  //println(Arduino.list());
-  arduino = new Arduino(this, Arduino.list()[0], 9600);
-  arduino.pinMode(ledPin, Arduino.OUTPUT);
-  // change the number below to match your port:
-  String portName = Serial.list()[12];
-  Serial myPort;
-  myPort = new Serial(this, portName, 9600);
-}
-
-void draw()
-{
-  arduino.digitalWrite(ledPin, Arduino.HIGH);
-  delay(1000);
-  arduino.digitalWrite(ledPin, Arduino.LOW);
-  delay(1000);
-}
-*/
-// Graphing sketch
-
-  // This program takes ASCII-encoded strings from the serial port at 9600 baud
-  // and graphs them. It expects values in the range 0 to 1023, followed by a
-  // newline, or newline and carriage return
-
-  // created 20 Apr 2005
-  // updated 24 Nov 2015
-  // by Tom Igoe
-  // This example code is in the public domain.
-
 import processing.serial.*;
 import controlP5.*;
 import java.util.*;
@@ -43,15 +7,15 @@ ControlP5 cp5;
 
 int knobValue = 100;
 
-Knob myKnobA;
+Knob potKnob;
 Serial myPort;        // The serial port
 int xPos = 1;         // horizontal position of the graph
 int xWidth = 1280/5;
 int xHeight = 720/5;
 float inByte = 0;
-boolean settingKnobAValue = false;
-int KNOB_MIN = 0;
-int KNOB_MAX = 100;
+boolean settingPotKnob = false;
+int POT_KNOB_MIN = 0;
+int POT_KNOB_MAX = 100;
 
 // Polar Plot Variables
 float stepperTheta;
@@ -65,26 +29,36 @@ float polarPlotInnerRadius;
 long interval = 10000L;
 LinkedList<PVector> list;
 
+PVector potPos     = new PVector( 50,  50);
+PVector slotPos    = new PVector( 50, 150);
+PVector buttonPos  = new PVector( 50, 250);
+PVector dcMotorPos = new PVector( 50,  50);
+PVector bendyPos   = new PVector(300,  50);
+PVector stepperPos = new PVector(640, 360);
+PVector stepperIn  = new PVector(543, 180);
+PVector distPos    = new PVector(600,  50);
+PVector servoPos   = new PVector(600,  640);
+
 
 void setup () {
-  KNOB_MAX *= 0.6666666f;
+  POT_KNOB_MAX *= 0.6666666f;
   size(1280,720);
   smooth();
   noStroke();
   
   cp5 = new ControlP5(this);
   
-  myKnobA = cp5.addKnob("knob")
-               .setRange(KNOB_MIN,KNOB_MAX)
+  potKnob = cp5.addKnob("Potenteometer")
+               .setRange(POT_KNOB_MIN,POT_KNOB_MAX)
                .setValue(50)
-               .setPosition(100,70)
+               .setPosition(potPos.x,potPos.y)
                .setRadius(50)
                .setDragDirection(Knob.VERTICAL)
                .setConstrained(false)
                ;
   PFont font = createFont("arial",20);
-  cp5.addTextfield("input")
-     .setPosition(300,100)
+  cp5.addTextfield("Stepper Position")
+     .setPosition(stepperIn.x,stepperIn.y)
      .setSize(200,40)
      .setFont(font)
      .setFocus(true)
@@ -111,7 +85,7 @@ void draw () {
     // draw the line:
     stroke(127, 34, 255);
     line(xPos, height, xPos, height - inByte/2);
-    drawPolarPlot(750, 450, height/4.0, height/4.0);  
+    drawPolarPlot(stepperPos.x, stepperPos.y, height/4.0, height/4.0);  
     // at the edge of the screen, go back to the beginning:
     if (xPos >= xWidth) {
       xPos = 0;
@@ -184,32 +158,32 @@ void controlEvent(ControlEvent theEvent) {
     print(Integer.parseInt(str));
   }
 }
-void knob(int theValue) {
-  int knobRealMax = int(1.3333f*float(KNOB_MAX));
-  int knobRange = abs(knobRealMax - KNOB_MIN);
+void Potenteometer(int theValue) {
+  int knobRealMax = int(1.3333f*float(POT_KNOB_MAX));
+  int knobRange = abs(knobRealMax - POT_KNOB_MIN);
   if (knobRealMax < theValue) {
-    myKnobA.setValue(theValue - knobRange);
+    potKnob.setValue(theValue - knobRange);
   }
-  else if (theValue < KNOB_MIN) {
-    myKnobA.setValue(theValue + knobRange);
+  else if (theValue < POT_KNOB_MIN) {
+    potKnob.setValue(theValue + knobRange);
   }
-    settingKnobAValue = true;
+    settingPotKnob = true;
   //println("a knob event. setting background to "+theValue);
 }
 void mouseClicked() {
   
 }
 void mouseReleased() {
-  if(settingKnobAValue) {
-    println("Knob Release Value is " + myKnobA.getValue());
-    settingKnobAValue = false;
+  if(settingPotKnob) {
+    println("Knob Release Value is " + potKnob.getValue());
+    settingPotKnob = false;
   }
 }
 
 void keyPressed() {
-  switch(key) {
-    case('1'):myKnobA.setValue(180);break;
-  }
+  //switch(key) {
+  //  case('1'):potKnob.setValue(180);break;
+  //}
   
 }
 void serialEvent (Serial myPort) {
