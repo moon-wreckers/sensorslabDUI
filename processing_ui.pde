@@ -36,6 +36,7 @@ void draw()
 
 import processing.serial.*;
 import controlP5.*;
+import java.util.*;
 
 
 ControlP5 cp5;
@@ -51,6 +52,20 @@ float inByte = 0;
 boolean settingKnobAValue = false;
 int KNOB_MIN = 0;
 int KNOB_MAX = 100;
+
+// Polar Plot Variables
+float stepperTheta;
+float theta_vel;
+float theta_acc;
+long lastTime;
+float stepperX;
+float stepperY;
+int pointSize = 4;
+float polarPlotInnerRadius;
+long interval = 10000L;
+LinkedList<PVector> list;
+
+
 void setup () {
   KNOB_MAX *= 0.6666666f;
   size(1280,720);
@@ -75,7 +90,11 @@ void setup () {
      .setFocus(true)
      .setColor(color(255,0,0))
      ;
-     
+   // Initialize Polar Plot Variables
+  list = new LinkedList<PVector>();
+  stepperTheta = 0;
+  theta_vel = 0.1;
+  lastTime = System.nanoTime();
     // Uncomment to enable serial to Arduino 
     /*myPort = new Serial(this, Serial.list()[0], 9600);
 
@@ -92,7 +111,7 @@ void draw () {
     // draw the line:
     stroke(127, 34, 255);
     line(xPos, height, xPos, height - inByte/2);
-
+    drawPolarPlot(750, 450, height/4.0, height/4.0);  
     // at the edge of the screen, go back to the beginning:
     if (xPos >= xWidth) {
       xPos = 0;
@@ -107,6 +126,51 @@ void draw () {
   //rect(80,40,140,320);
   }
   
+// Draw the polar plot for the stepper motor
+void drawPolarPlot(float x, float y, float plotWidth, float plotHeight) {
+  // Translate the origin point to the center of the screen
+  polarPlotInnerRadius = plotHeight * 0.1;
+  translate(x, y);
+  fill(0);
+  ellipse(0.0, 0.0, plotWidth, plotHeight);
+  ellipse(0.0, 0.0, 2.0*polarPlotInnerRadius, 2.0*polarPlotInnerRadius);
+  if (System.nanoTime() - lastTime > interval) {
+      list.addFirst(new PVector(stepperTheta,polarPlotInnerRadius));
+      for (int j = 1; j < list.size(); j++) {
+        list.get(j).y += pointSize/4;
+        
+        if (abs(list.get(j).y - (plotHeight * 0.5)) < 3.0) {
+          list.remove(j);
+        }
+      }
+    lastTime = System.nanoTime();
+  }
+  if (!list.isEmpty()) {
+    // Draw the ellipse at the cartesian coordinate
+    ellipseMode(CENTER);
+    noStroke();
+    fill(200);
+    
+    for (int i = 0; i < list.size(); i++) {
+      
+      stepperX = list.get(i).y * cos(list.get(i).x);
+      stepperY = list.get(i).y * sin(list.get(i).x);
+      ellipse(stepperX, stepperY, pointSize, pointSize);
+      if (list.get(i).y >= (plotHeight * 0.5)) {
+        list.remove(i);
+      }
+    }
+  }
+  stroke(255);
+  line(-plotHeight*0.5, 0.0, plotHeight*0.5, 0.0);
+  line(0.0, -plotHeight*0.5, 0.0, plotHeight*0.5);
+  // Apply acceleration and velocity to angle (r remains static in this example)
+  stepperTheta += theta_vel;
+  if (abs(stepperTheta) > 10.0) {
+    theta_vel = -theta_vel;
+  }
+  translate(-x,-y);
+}
 // Get string from text box
 void controlEvent(ControlEvent theEvent) {
   if(theEvent.isAssignableFrom(Textfield.class)) {
