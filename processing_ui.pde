@@ -16,6 +16,7 @@ float inByte = 0;
 boolean settingPotKnob = false;
 int POT_KNOB_MIN = 0;
 int POT_KNOB_MAX = 100;
+int buttonColor;
 
 // Polar Plot Variables
 float stepperTheta;
@@ -28,16 +29,27 @@ int pointSize = 4;
 float polarPlotInnerRadius;
 long interval = 10000L;
 LinkedList<PVector> list;
+PVector textBoxSize= new PVector(200, 40); 
 
-PVector potPos     = new PVector( 50,  50);
-PVector slotPos    = new PVector( 50, 150);
-PVector buttonPos  = new PVector( 50, 250);
+// Names of the UI elements
+String stepperInStr  = "Stepper Position";
+String potNameStr    = "Potentiometer"; // Warning you must change the potentiometer() method if you change this.
+String motorSpeedStr = "DC Motor Speed";
+String slotSensorStr = "Slot Sensor";
+String buttonStr     = "Push Button";
+
+// Positions of each of the UI elements
+PVector potPos     = new PVector(100,  50);
+PVector slotPos    = new PVector( 50, 250);
+PVector buttonPos  = new PVector( 50, 350);
 PVector dcMotorPos = new PVector( 50,  50);
+PVector dcInPos    = new PVector( 50, 650);
 PVector bendyPos   = new PVector(300,  50);
 PVector stepperPos = new PVector(640, 360);
 PVector stepperIn  = new PVector(543, 180);
 PVector distPos    = new PVector(600,  50);
 PVector servoPos   = new PVector(600,  640);
+PVector servoIn    = new PVector(600,  640);
 
 
 void setup () {
@@ -48,7 +60,7 @@ void setup () {
   
   cp5 = new ControlP5(this);
   
-  potKnob = cp5.addKnob("Potenteometer")
+  potKnob = cp5.addKnob(potNameStr)
                .setRange(POT_KNOB_MIN,POT_KNOB_MAX)
                .setValue(50)
                .setPosition(potPos.x,potPos.y)
@@ -57,13 +69,29 @@ void setup () {
                .setConstrained(false)
                ;
   PFont font = createFont("arial",20);
-  cp5.addTextfield("Stepper Position")
+  cp5.addTextfield(stepperInStr)
      .setPosition(stepperIn.x,stepperIn.y)
-     .setSize(200,40)
+     .setSize(int(textBoxSize.x),int(textBoxSize.y))
      .setFont(font)
      .setFocus(true)
      .setColor(color(255,0,0))
      ;
+   cp5.addTextfield(motorSpeedStr)
+     .setPosition(dcInPos.x,dcInPos.y)
+     .setSize(int(textBoxSize.x),int(textBoxSize.y))
+     .setFont(font)
+     .setFocus(true)
+     .setColor(color(255,0,0))
+     ;
+   cp5.addButton(slotSensorStr)
+     .setPosition(slotPos.x,slotPos.y)
+     .setSize(int(textBoxSize.x),int(textBoxSize.y))
+     .updateSize();
+  buttonColor = cp5.getController(slotSensorStr).getColor().getBackground();
+  cp5.addButton(buttonStr)
+     .setPosition(buttonPos.x,buttonPos.y)
+     .setSize(int(textBoxSize.x),int(textBoxSize.y))
+     .updateSize();
    // Initialize Polar Plot Variables
   list = new LinkedList<PVector>();
   stepperTheta = 0;
@@ -81,7 +109,9 @@ void setup () {
 
 void draw () {
   
-    //text(cp5.get(Textfield.class,"input").getText(), 360,130);
+    //text(cp5.get(Textfield.class,slotSensorStr).getText(), 360,130);
+    //text(cp5.get(Textfield.class,motorSpeedStr).getText(), 360,130);
+    
     // draw the line:
     stroke(127, 34, 255);
     line(xPos, height, xPos, height - inByte/2);
@@ -147,18 +177,22 @@ void drawPolarPlot(float x, float y, float plotWidth, float plotHeight) {
 }
 // Get string from text box
 void controlEvent(ControlEvent theEvent) {
+  
   if(theEvent.isAssignableFrom(Textfield.class)) {
     println("controlEvent: accessing a string from controller '"
             +theEvent.getName()+"': "
             +theEvent.getStringValue()
             );
-    print("Printing int from string: "); 
-    String str = theEvent.getStringValue();
-    str = str.replaceAll("[^\\d]", "");
-    print(Integer.parseInt(str));
+    if (theEvent.getName().equals(stepperInStr)) {
+      String str = theEvent.getStringValue();
+      str = str.replaceAll("[^\\d]", "");
+      if (!str.equals("")) {
+        println(Integer.parseInt(str));
+      }
+    }
   }
 }
-void Potenteometer(int theValue) {
+void Potentiometer(int theValue) {
   int knobRealMax = int(1.3333f*float(POT_KNOB_MAX));
   int knobRange = abs(knobRealMax - POT_KNOB_MIN);
   if (knobRealMax < theValue) {
@@ -169,6 +203,9 @@ void Potenteometer(int theValue) {
   }
     settingPotKnob = true;
   //println("a knob event. setting background to "+theValue);
+}
+void Stepper_Position() {
+  println("Clicked");
 }
 void mouseClicked() {
   
