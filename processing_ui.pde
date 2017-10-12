@@ -9,6 +9,12 @@ int knobValue = 100;
 
 Knob potKnob;
 Knob servoKnob;
+Textfield stepperTextField;
+Textfield motorTextField;
+Button slotButton;
+Button buttonButton;
+Slider bendySlider;
+Slider irSlider;
 Serial myPort;        // The serial port
 int state = 0;
 SensorValues sensorValues;
@@ -94,46 +100,46 @@ void setup () {
     .setConstrained(false)
     ;
   PFont font = createFont("arial", 20);
-  cp5.addTextfield(stepperInStr)
+  stepperTextField = cp5.addTextfield(stepperInStr)
     .setPosition(stepperIn.x, stepperIn.y)
     .setSize(int(textBoxSize.x), int(textBoxSize.y))
     .setFont(font)
     .setColor(color(255, 0, 0))
     ;
-  cp5.addTextfield(motorSpeedStr)
+  motorTextField = cp5.addTextfield(motorSpeedStr)
     .setPosition(dcInPos.x, dcInPos.y)
     .setSize(int(textBoxSize.x), int(textBoxSize.y))
     .setFont(font)
     .setColor(color(255, 0, 0))
     ;
-  cp5.addButton(slotSensorStr)
+  slotButton = cp5.addButton(slotSensorStr)
     .setPosition(slotPos.x, slotPos.y)
     .setSize(int(textBoxSize.x), int(textBoxSize.y))
     .updateSize();
   buttonColor = cp5.getController(slotSensorStr).getColor().getBackground();
-  cp5.addButton(buttonStr)
+  buttonButton = cp5.addButton(buttonStr)
     .setPosition(buttonPos.x, buttonPos.y)
     .setSize(int(textBoxSize.x), int(textBoxSize.y))
     .updateSize();
-       
+
   // add a horizontal slider
-  cp5.addSlider(bendyStr)
-     .setPosition(bendyPos.x,bendyPos.y)
-     .setSize(200,20)
-     .setRange(0,200)
-     .setValue(128)
-     ;
+  bendySlider = cp5.addSlider(bendyStr)
+    .setPosition(bendyPos.x, bendyPos.y)
+    .setSize(200, 20)
+    .setRange(0, 100)
+    .setValue(100)
+    ;
   // reposition the Label for controller 'slider'
   cp5.getController(bendyStr).getCaptionLabel().align(ControlP5.LEFT, ControlP5.BOTTOM_OUTSIDE).setPaddingX(0);
   cp5.getController(bendyStr).getValueLabel().align(ControlP5.RIGHT, ControlP5.BOTTOM_OUTSIDE).setPaddingX(0);
   cp5.getController(bendyStr).lock();
   // add a horizontal slider
-  cp5.addSlider(distStr)
-     .setPosition(distPos.x,distPos.y)
-     .setSize(200,20)
-     .setRange(0,200)
-     .setValue(128)
-     ;
+  irSlider = cp5.addSlider(distStr)
+    .setPosition(distPos.x, distPos.y)
+    .setSize(200, 20)
+    .setRange(10, 80)
+    .setValue(128)
+    ;
   // reposition the Label for controller 'slider'
   cp5.getController(distStr).getCaptionLabel().align(ControlP5.LEFT, ControlP5.BOTTOM_OUTSIDE).setPaddingX(0);
   cp5.getController(distStr).getValueLabel().align(ControlP5.RIGHT, ControlP5.BOTTOM_OUTSIDE).setPaddingX(0);
@@ -146,23 +152,23 @@ void setup () {
   // Uncomment to enable serial to Arduino
   try {
     myPort = new Serial(this, Serial.list()[0], 9600);
-   
-     // don't generate a serialEvent() unless you get a newline character:
-     myPort.bufferUntil('\n');
-     
-     serialDetected = true;
+
+    // don't generate a serialEvent() unless you get a newline character:
+    myPort.bufferUntil('\n');
+
+    serialDetected = true;
   }
   catch (Exception e) {
     println("Warning: Couldn't connect to the Arduino! Are you running the program with sudo?");
     serialDetected = false;
   }
-   
+
   // set initial background:
   background(0);
 }
 
 void draw () {
-  
+
   //text(cp5.get(Textfield.class,slotSensorStr).getText(), 360,130);
   //text(cp5.get(Textfield.class,motorSpeedStr).getText(), 360,130);
 
@@ -242,9 +248,9 @@ void controlEvent(ControlEvent theEvent) {
       if (state != DC_STATE) {
         setState(DC_STATE);
       }
-      
+
       String str = theEvent.getStringValue();
-      str = str.replaceAll("[^0-9]", "");
+      str = str.replaceAll("[^-0-9]", "");
       if (!str.equals("") && serialDetected) {
         str = "a" + String.valueOf(Integer.parseInt(str)) + "\n";
         myPort.write(str);
@@ -256,10 +262,11 @@ void controlEvent(ControlEvent theEvent) {
         setState(STEPPER_STATE);
       }
       String str = theEvent.getStringValue();
-      str = str.replaceAll("[^0-9]", "");
+
+      str = str.replaceAll("[^-0-9]", "st");
       //println(str);
       if (!str.equals("") && serialDetected) {
-        str = "a" + String.valueOf(Integer.parseInt(str)) + "\n";
+        str = "a" + String.valueOf(int(Float.parseFloat(str)*3200.0/360.0)) + "\n";
         myPort.write(str);
       }
     }
@@ -307,10 +314,12 @@ void mouseReleased() {
 void setState(int newState) {
   //print("Change state Detected."); println(newState);
   if (serialDetected) {
-      String outString = "s" + String.valueOf(newState) + "\n";
-      myPort.write(outString);
-    }
-    state = newState;
+    String outString = "s" + String.valueOf(newState) + "\n";
+    myPort.write(outString);
+    String str = "a0";
+    myPort.write(str);
+  }
+  state = newState;
 }
 
 void keyPressed() {
@@ -324,9 +333,21 @@ void serialEvent (Serial myPort) {
     //println(inString);
     sensorValues = new SensorValues(inString);
     //println(sensorValues.isValid());
-    if(sensorValues.isValid()) {
+    if (sensorValues.isValid()) {
       //println(sensorValues.getState());
-      //sensorValues.printSensorValues();
+      sensorValues.printSensorValues();
+      potKnob.setValue(sensorValues.getPot());
+      bendySlider.setValue(sensorValues.getFlex()/10);
+      bendySlider.setColorForeground(color(255.0*90.0/float(sensorValues.getFlex()), 0, sensorValues.getFlex()*3.0));
+      irSlider.setValue(sensorValues.getIr());
+      irSlider.setColorForeground(color(sensorValues.getIr()*3.0, 0, 80.0*90.0/float(sensorValues.getIr())));
+      if (500 < sensorValues.getSlot()) {
+        slotButton.setCaptionLabel("Slot Open.");
+        slotButton.setColorBackground(buttonColor);
+      } else {
+        slotButton.setCaptionLabel("Slot Blocked.");
+        slotButton.setColorBackground(color(255, 0, 0));
+      }
     }
     // get the ASCII string:
     //String inString = myPort.readStringUntil('\n');
@@ -349,20 +370,59 @@ void serialEvent (Serial myPort) {
 }
 
 public class SensorValues {
-  private String stateID  = "sb"; private int state;          public int getState()          {return state;}
-  private String potID    = "rp"; private int pot;            public int getPot()            {return pot;}
-  private String flexID   = "bb"; private int flex;           public int getFlex()           {return flex;}
-  private String irID     = "ir"; private int ir;             public int getIr()             {return ir;}
-  private String slotID   = "ss"; private int slot;           public int getSlot()           {return slot;}
-  private String servoID  = "sv"; private int servoEncoder;   public int getServoEncoder()   {return servoEncoder;}
-  private String stepID   = "st"; private int stepperEncoder; public int getStepperEncoder() {return stepperEncoder;}
-  private String dcEncID  = "dc"; private int dcEncoder;      public int getDcEncoder()      {return dcEncoder;}
-  private String dcVoltID = "dv"; private int dcVoltage;      public int getDcVoltage()      {return dcVoltage;}
-  
-  private boolean valid = false; public boolean isValid() {return valid;}
+  private String stateID  = "sb"; 
+  private int state;          
+  public int getState() {
+    return state;
+  }
+  private String potID    = "rp"; 
+  private int pot;            
+  public int getPot() {
+    return pot;
+  }
+  private String flexID   = "bb"; 
+  private int flex;           
+  public int getFlex() {
+    return flex;
+  }
+  private String irID     = "ir"; 
+  private int ir;             
+  public int getIr() {
+    return ir;
+  }
+  private String slotID   = "ss"; 
+  private int slot;           
+  public int getSlot() {
+    return slot;
+  }
+  private String servoID  = "sv"; 
+  private int servoEncoder;   
+  public int getServoEncoder() {
+    return servoEncoder;
+  }
+  private String stepID   = "st"; 
+  private int stepperEncoder; 
+  public int getStepperEncoder() {
+    return stepperEncoder;
+  }
+  private String dcEncID  = "dc"; 
+  private int dcEncoder;      
+  public int getDcEncoder() {
+    return dcEncoder;
+  }
+  private String dcVoltID = "dv"; 
+  private int dcVoltage;      
+  public int getDcVoltage() {
+    return dcVoltage;
+  }
+
+  private boolean valid = false; 
+  public boolean isValid() {
+    return valid;
+  }
   /**
-  *  Debug Constructor for SensorValues
-  **/
+   *  Debug Constructor for SensorValues
+   **/
   public SensorValues() {
     this.valid          = true;
     this.state          = 1;
@@ -383,18 +443,17 @@ public class SensorValues {
   }
   private boolean checkValidity(String in) {
     if (in.contains(stateID) 
-    &&  in.contains(potID) 
-    &&  in.contains(flexID) 
-    &&  in.contains(irID) 
-    &&  in.contains(slotID) 
-    &&  in.contains(servoID) 
-    &&  in.contains(stepID) 
-    &&  in.contains(dcEncID)
-    &&  in.contains(dcVoltID)) {
+      &&  in.contains(potID) 
+      &&  in.contains(flexID) 
+      &&  in.contains(irID) 
+      &&  in.contains(slotID) 
+      &&  in.contains(servoID) 
+      &&  in.contains(stepID) 
+      &&  in.contains(dcEncID)
+      &&  in.contains(dcVoltID)) {
       this.valid = true;
       return true;
-    }
-    else {
+    } else {
       this.valid = false;
       //println("Warning: Arduino sent an invalid state.");
       return false;
@@ -438,10 +497,10 @@ public class SensorValues {
       this.valid = false;
       println("Error in SensorValues.parseSerial()\nNot all values were available.");
     }
-    
   }
-  
+
   public void printSensorValues() {
+    println("");
     println("State:           " + String.valueOf(this.getState()));
     println("Potentiometer:..." + String.valueOf(this.getPot()));
     println("Flex Sensor:     " + String.valueOf(this.getFlex()));
