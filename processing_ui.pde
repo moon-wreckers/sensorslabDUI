@@ -246,7 +246,7 @@ void controlEvent(ControlEvent theEvent) {
       String str = theEvent.getStringValue();
       str = str.replaceAll("[^0-9]", "");
       if (!str.equals("") && serialDetected) {
-        str = "a" + String.valueOf(Integer.parseInt(str));
+        str = "a" + String.valueOf(Integer.parseInt(str)) + "\n";
         myPort.write(str);
       }
     }
@@ -259,7 +259,7 @@ void controlEvent(ControlEvent theEvent) {
       str = str.replaceAll("[^0-9]", "");
       //println(str);
       if (!str.equals("") && serialDetected) {
-        str = "a" + String.valueOf(Integer.parseInt(str));
+        str = "a" + String.valueOf(Integer.parseInt(str)) + "\n";
         myPort.write(str);
       }
     }
@@ -276,9 +276,6 @@ void Potentiometer(int theValue) {
   //println("a knob event. setting background to "+theValue);
 }
 void Servo(int theServoValue) {
-  if (state != SERVO_STATE) {
-    setState(SERVO_STATE);
-  }
   int knobRealMax = int(0.5f*1.3333f*float(SERVO_KNOB_MAX)) + 1;
   int knobRange = abs(knobRealMax - SERVO_KNOB_MIN);
   if (knobRealMax < theServoValue) {
@@ -299,7 +296,10 @@ void mouseReleased() {
     //println("Knob Release Value is " + servoKnob.getValue());
     settingServoKnob = false;
     if (serialDetected) {
-      String outString = "a" + String.valueOf(servoKnob.getValue());
+      if (state != SERVO_STATE) {
+        setState(SERVO_STATE);
+      }
+      String outString = "a" + String.valueOf(servoKnob.getValue()) + "\n";
       myPort.write(outString);
     }
   }
@@ -307,7 +307,7 @@ void mouseReleased() {
 void setState(int newState) {
   //print("Change state Detected."); println(newState);
   if (serialDetected) {
-      String outString = "s" + String.valueOf(newState);
+      String outString = "s" + String.valueOf(newState) + "\n";
       myPort.write(outString);
     }
     state = newState;
@@ -321,10 +321,12 @@ void keyPressed() {
 void serialEvent (Serial myPort) {
   if (serialDetected) {
     String inString = myPort.readStringUntil('\n');
+    //println(inString);
     sensorValues = new SensorValues(inString);
     //println(sensorValues.isValid());
     if(sensorValues.isValid()) {
-      sensorValues.printSensorValues();
+      //println(sensorValues.getState());
+      //sensorValues.printSensorValues();
     }
     // get the ASCII string:
     //String inString = myPort.readStringUntil('\n');
@@ -343,7 +345,7 @@ void serialEvent (Serial myPort) {
   //else {
   //  sensorValues = new SensorValues();
   //}
-  this.setState(sensorValues.getState());
+  //this.setState(sensorValues.getState());
 }
 
 public class SensorValues {
