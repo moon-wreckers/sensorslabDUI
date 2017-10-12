@@ -11,6 +11,8 @@ Knob potKnob;
 Knob servoKnob;
 Textfield stepperTextField;
 Textfield motorTextField;
+Button dcPositionButton;
+Button dcSpeedButton;
 Button slotButton;
 Button buttonButton;
 Slider bendySlider;
@@ -56,27 +58,31 @@ boolean startupStateSet = false;
 boolean receivingSerial = false;
 
 // Names of the UI elements
-String stepperInStr  = "Stepper Position (Degrees)";
-String potNameStr    = "Potentiometer"; // Warning you must change the potentiometer() method if you change this.
-String motorSpeedStr = "DC Motor Speed";
-String slotSensorStr = "Slot Sensor";
-String buttonStr     = "Push Button";
-String bendyStr      = "Bendi Boi";
-String distStr       = "IR Distance";
-String servoStr      = "Servo";
+String stepperInStr        = "Stepper Position (Degrees)";
+String potNameStr          = "Potentiometer"; // Warning you must change the potentiometer() method if you change this.
+String motorSpeedStr       = "DC Motor Speed";
+String dcPositionButtonStr = "DC Position";
+String dcSpeedButtonStr    = "DC Speed";
+String slotSensorStr       = "Slot Sensor";
+String buttonStr           = "Push Button";
+String bendyStr            = "Bendi Boi";
+String distStr             = "IR Distance";
+String servoStr            = "Servo";
 
 // Positions of each of the UI elements
-PVector potPos     = new PVector(100, 50);
-PVector slotPos    = new PVector( 50, 250);
-PVector buttonPos  = new PVector( 50, 350);
-PVector dcMotorPos = new PVector( 50, 50);
-PVector dcInPos    = new PVector( 50, 650);
-PVector bendyPos   = new PVector(543, 50);
-PVector stepperPos = new PVector(640, 360);
-PVector stepperIn  = new PVector(543, 180);
-PVector distPos    = new PVector(950, 50);
-PVector servoPos   = new PVector(980, 300);
-PVector servoIn    = new PVector(600, 640);
+PVector potPos        = new PVector(100, 50);
+PVector slotPos       = new PVector( 50, 250);
+PVector buttonPos     = new PVector( 50, 350);
+PVector dcMotorPos    = new PVector( 50, 50);
+PVector dcInPos       = new PVector( 50, 650);
+PVector dcSpeedPos    = new PVector(275, 650);
+PVector dcPositionPos = new PVector(275, 675);
+PVector bendyPos      = new PVector(543, 50);
+PVector stepperPos    = new PVector(640, 360);
+PVector stepperIn     = new PVector(543, 180);
+PVector distPos       = new PVector(950, 50);
+PVector servoPos      = new PVector(980, 300);
+PVector servoIn       = new PVector(600, 640);
 
 
 void setup () {
@@ -119,6 +125,14 @@ void setup () {
     .setFont(font)
     .setColor(color(255, 0, 0))
     ;
+  dcPositionButton = cp5.addButton(dcPositionButtonStr)
+    .setPosition(dcPositionPos.x, dcPositionPos.y)
+    .setSize(int(textBoxSize.x/4.0), int(textBoxSize.y/2.0))
+    .updateSize();
+  dcSpeedButton = cp5.addButton(dcSpeedButtonStr)
+    .setPosition(dcSpeedPos.x, dcSpeedPos.y)
+    .setSize(int(textBoxSize.x/4.0), int(textBoxSize.y/2.0))
+    .updateSize();
   slotButton = cp5.addButton(slotSensorStr)
     .setPosition(slotPos.x, slotPos.y)
     .setSize(int(textBoxSize.x), int(textBoxSize.y))
