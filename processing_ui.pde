@@ -233,20 +233,32 @@ void drawPolarPlot(float x, float y, float plotWidth, float plotHeight) {
 void controlEvent(ControlEvent theEvent) {
 
   if (theEvent.isAssignableFrom(Textfield.class)) {
-    println("controlEvent: accessing a string from controller '"
-      +theEvent.getName()+"': "
-      +theEvent.getStringValue()
-      );
+    //println("controlEvent: accessing a string from controller '"
+    //  +theEvent.getName()+"': "
+    //  +theEvent.getStringValue()
+    //  );
+    // If setting the stepper motor value
+    if (theEvent.getName().equals(motorSpeedStr)) {
+      if (state != DC_STATE) {
+        setState(DC_STATE);
+      }
       
+      String str = theEvent.getStringValue();
+      str = str.replaceAll("[^0-9]", "");
+      if (!str.equals("") && serialDetected) {
+        str = "a" + String.valueOf(Integer.parseInt(str));
+        myPort.write(str);
+      }
+    }
     // If setting the stepper motor value
     if (theEvent.getName().equals(stepperInStr)) {
       if (state != STEPPER_STATE) {
         setState(STEPPER_STATE);
       }
       String str = theEvent.getStringValue();
-      str = str.replaceAll("[^\\d]", "");
+      str = str.replaceAll("[^0-9]", "");
+      //println(str);
       if (!str.equals("") && serialDetected) {
-          println(Integer.parseInt(str));
         str = "a" + String.valueOf(Integer.parseInt(str));
         myPort.write(str);
       }
@@ -276,7 +288,6 @@ void Servo(int theServoValue) {
     servoKnob.setValue(SERVO_KNOB_MIN);
   }  
   settingServoKnob = true;
-  //println("a knob event. setting background to "+theValue);
 }
 void Stepper_Position() {
   println("Clicked");
@@ -285,7 +296,7 @@ void mouseClicked() {
 }
 void mouseReleased() {
   if (settingServoKnob) {
-    println("Knob Release Value is " + servoKnob.getValue());
+    //println("Knob Release Value is " + servoKnob.getValue());
     settingServoKnob = false;
     if (serialDetected) {
       String outString = "a" + String.valueOf(servoKnob.getValue());
@@ -294,7 +305,7 @@ void mouseReleased() {
   }
 }
 void setState(int newState) {
-  println("Change state Detected.");
+  //print("Change state Detected."); println(newState);
   if (serialDetected) {
       String outString = "s" + String.valueOf(newState);
       myPort.write(outString);
@@ -311,7 +322,7 @@ void serialEvent (Serial myPort) {
   if (serialDetected) {
     String inString = myPort.readStringUntil('\n');
     sensorValues = new SensorValues(inString);
-    println(sensorValues.isValid());
+    //println(sensorValues.isValid());
     if(sensorValues.isValid()) {
       sensorValues.printSensorValues();
     }
@@ -329,9 +340,9 @@ void serialEvent (Serial myPort) {
     //  }
     //}
   }
-  else {
-    sensorValues = new SensorValues();
-  }
+  //else {
+  //  sensorValues = new SensorValues();
+  //}
   this.setState(sensorValues.getState());
 }
 
@@ -383,7 +394,7 @@ public class SensorValues {
     }
     else {
       this.valid = false;
-      println("Warning: Arduino sent an invalid state.");
+      //println("Warning: Arduino sent an invalid state.");
       return false;
     }
   }
@@ -414,7 +425,7 @@ public class SensorValues {
         serialIn = serialIn.split(dcEncID)[1];
         this.dcEncoder = Integer.parseInt(serialIn.split(dcVoltID)[0]);
         //println(this.dcEncoder);
-        print("State: \""); print(serialIn); print("\"");
+        //print("State: \""); print(serialIn); print("\"");
         serialIn = serialIn.split(dcVoltID)[1];
         this.dcVoltage = Integer.parseInt(serialIn);
         //println(this.dcVoltage);
