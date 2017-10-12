@@ -10,7 +10,7 @@ int knobValue = 100;
 Knob potKnob;
 Knob servoKnob;
 Serial myPort;        // The serial port
-int state = 1;
+int state = 0;
 SensorValues sensorValues;
 //int SERVO
 boolean serialDetected = false;
@@ -23,6 +23,9 @@ int POT_KNOB_MIN = 0;
 int POT_KNOB_MAX = 100;
 int SERVO_KNOB_MIN = 0;
 int SERVO_KNOB_MAX = 179;
+int SERVO_STATE = 0;
+int STEPPER_STATE = 1;
+int DC_STATE = 2;
 
 int buttonColor;
 
@@ -234,7 +237,12 @@ void controlEvent(ControlEvent theEvent) {
       +theEvent.getName()+"': "
       +theEvent.getStringValue()
       );
+      
+    // If setting the stepper motor value
     if (theEvent.getName().equals(stepperInStr)) {
+      if (state != STEPPER_STATE) {
+        setState(STEPPER_STATE);
+      }
       String str = theEvent.getStringValue();
       str = str.replaceAll("[^\\d]", "");
       if (!str.equals("") && serialDetected) {
@@ -256,6 +264,9 @@ void Potentiometer(int theValue) {
   //println("a knob event. setting background to "+theValue);
 }
 void Servo(int theServoValue) {
+  if (state != SERVO_STATE) {
+    setState(SERVO_STATE);
+  }
   int knobRealMax = int(0.5f*1.3333f*float(SERVO_KNOB_MAX)) + 1;
   int knobRange = abs(knobRealMax - SERVO_KNOB_MIN);
   if (knobRealMax < theServoValue) {
@@ -283,6 +294,7 @@ void mouseReleased() {
   }
 }
 void setState(int newState) {
+  println("Change state Detected.");
   if (serialDetected) {
       String outString = "s" + String.valueOf(newState);
       myPort.write(outString);
@@ -297,7 +309,12 @@ void keyPressed() {
 }
 void serialEvent (Serial myPort) {
   if (serialDetected) {
-    sensorValues = new SensorValues(myPort.readStringUntil('\n'));
+    String inString = myPort.readStringUntil('\n');
+    sensorValues = new SensorValues(inString);
+    println(sensorValues.isValid());
+    if(sensorValues.isValid()) {
+      sensorValues.printSensorValues();
+    }
     // get the ASCII string:
     //String inString = myPort.readStringUntil('\n');
     //println(inString);
@@ -312,42 +329,103 @@ void serialEvent (Serial myPort) {
     //  }
     //}
   }
+  else {
+    sensorValues = new SensorValues();
+  }
+  this.setState(sensorValues.getState());
 }
 
 public class SensorValues {
-  String stateID  = "sb"; private int state;          public int getState()          {return state;}
-  String potID    = "rp"; private int pot;            public int getPot()            {return pot;}
-  String flexID   = "bb"; private int flex;           public int getFlex()           {return flex;}
-  String irID     = "ir"; private int ir;             public int getIr()             {return ir;}
-  String slotID   = "ss"; private int slot;           public int getSlot()           {return slot;}
-  String servoID  = "sv"; private int servoEncoder;   public int getServoEncoder()   {return servoEncoder;}
-  String stepID   = "st"; private int stepperEncoder; public int getStepperEncoder() {return stepperEncoder;}
-  String dcEncID  = "dc"; private int dcEncoder;      public int getDcEncoder()      {return dcEncoder;}
-  String dcVoltID = "dv"; private int dcVoltage;      public int getDcVoltage()      {return dcVoltage;}
+  private String stateID  = "sb"; private int state;          public int getState()          {return state;}
+  private String potID    = "rp"; private int pot;            public int getPot()            {return pot;}
+  private String flexID   = "bb"; private int flex;           public int getFlex()           {return flex;}
+  private String irID     = "ir"; private int ir;             public int getIr()             {return ir;}
+  private String slotID   = "ss"; private int slot;           public int getSlot()           {return slot;}
+  private String servoID  = "sv"; private int servoEncoder;   public int getServoEncoder()   {return servoEncoder;}
+  private String stepID   = "st"; private int stepperEncoder; public int getStepperEncoder() {return stepperEncoder;}
+  private String dcEncID  = "dc"; private int dcEncoder;      public int getDcEncoder()      {return dcEncoder;}
+  private String dcVoltID = "dv"; private int dcVoltage;      public int getDcVoltage()      {return dcVoltage;}
   
-  public SensorValues(String serialIn) {
-    this.parseSerial(serialIn);
+  private boolean valid = false; public boolean isValid() {return valid;}
+  /**
+  *  Debug Constructor for SensorValues
+  **/
+  public SensorValues() {
+    this.valid          = true;
+    this.state          = 1;
+    this.pot            = 0;
+    this.flex           = 1000;
+    this.ir             = 300;
+    this.slot           = 900;
+    this.servoEncoder   = 0;
+    this.stepperEncoder = 0;
+    this.dcEncoder      = 0;
+    this.dcVoltage      = 0;
   }
-  
+  public SensorValues(String serialIn) {
+    this.checkValidity(serialIn);
+    if (this.isValid()) {
+      this.parseSerial(serialIn);
+    }
+  }
+  private boolean checkValidity(String in) {
+    if (in.contains(stateID) 
+    &&  in.contains(potID) 
+    &&  in.contains(flexID) 
+    &&  in.contains(irID) 
+    &&  in.contains(slotID) 
+    &&  in.contains(servoID) 
+    &&  in.contains(stepID) 
+    &&  in.contains(dcEncID)
+    &&  in.contains(dcVoltID)) {
+      this.valid = true;
+      return true;
+    }
+    else {
+      this.valid = false;
+      println("Warning: Arduino sent an invalid state.");
+      return false;
+    }
+  }
   private void parseSerial(String serialIn) {
-    serialIn = serialIn.split(stateID)[1];
-    this.state = Integer.parseInt(serialIn.split(potID)[0]);
-    serialIn = serialIn.split(potID)[1];
-    this.pot = Integer.parseInt(serialIn.split(flexID)[0]);
-    serialIn = serialIn.split(flexID)[1];
-    this.flex = Integer.parseInt(serialIn.split(irID)[0]);
-    serialIn = serialIn.split(irID)[1];
-    this.ir = Integer.parseInt(serialIn.split(slotID)[0]);
-    serialIn = serialIn.split(slotID)[1];
-    this.slot = Integer.parseInt(serialIn.split(servoID)[0]);
-    serialIn = serialIn.split(servoID)[1];
-    this.servoEncoder = Integer.parseInt(serialIn.split(stepID)[0]);
-    serialIn = serialIn.split(stepID)[1];
-    this.stepperEncoder = Integer.parseInt(serialIn.split(dcEncID)[0]);
-    serialIn = serialIn.split(dcEncID)[1];
-    this.dcEncoder = Integer.parseInt(serialIn.split(dcVoltID)[0]);
-    serialIn = serialIn.split(dcVoltID)[1];
-    this.dcVoltage = Integer.parseInt(serialIn);
+    try {
+      if (this.isValid()) {
+        serialIn = serialIn.replace("\n", "").replace("\r", "");
+        serialIn = serialIn.split(stateID)[1];
+        this.state = Integer.parseInt(serialIn.split(potID)[0]);
+        serialIn = serialIn.split(potID)[1];
+        this.pot = Integer.parseInt(serialIn.split(flexID)[0]);
+        //println(this.pot);
+        serialIn = serialIn.split(flexID)[1];
+        this.flex = Integer.parseInt(serialIn.split(irID)[0]);
+        //println(this.flex);
+        serialIn = serialIn.split(irID)[1];
+        this.ir = Integer.parseInt(serialIn.split(slotID)[0]);
+        //println(this.ir);
+        serialIn = serialIn.split(slotID)[1];
+        this.slot = Integer.parseInt(serialIn.split(servoID)[0]);
+        //println(this.slot);
+        serialIn = serialIn.split(servoID)[1];
+        this.servoEncoder = Integer.parseInt(serialIn.split(stepID)[0]);
+        //println(this.servoEncoder);
+        serialIn = serialIn.split(stepID)[1];
+        this.stepperEncoder = Integer.parseInt(serialIn.split(dcEncID)[0]);
+        //println(this.stepperEncoder);
+        serialIn = serialIn.split(dcEncID)[1];
+        this.dcEncoder = Integer.parseInt(serialIn.split(dcVoltID)[0]);
+        //println(this.dcEncoder);
+        print("State: \""); print(serialIn); print("\"");
+        serialIn = serialIn.split(dcVoltID)[1];
+        this.dcVoltage = Integer.parseInt(serialIn);
+        //println(this.dcVoltage);
+        this.valid = true;
+      }
+    }
+    catch (Exception e) {
+      this.valid = false;
+      println("Error in SensorValues.parseSerial()\nNot all values were available.");
+    }
+    
   }
   
   public void printSensorValues() {
