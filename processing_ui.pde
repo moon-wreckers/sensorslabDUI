@@ -26,7 +26,7 @@ int xHeight = 720/5;
 float inByte = 0;
 boolean settingServoKnob = false;
 int POT_KNOB_MIN = 0;
-int POT_KNOB_MAX = 100;
+int POT_KNOB_MAX = 270;
 int SERVO_KNOB_MIN = 0;
 int SERVO_KNOB_MAX = 179;
 int SERVO_STATE = 0;
@@ -52,9 +52,11 @@ float polarPlotInnerRadius;
 long interval = 10000L;
 LinkedList<PVector> list;
 PVector textBoxSize= new PVector(200, 40); 
+boolean startupStateSet = false;
+boolean receivingSerial = false;
 
 // Names of the UI elements
-String stepperInStr  = "Stepper Position";
+String stepperInStr  = "Stepper Position (Degrees)";
 String potNameStr    = "Potentiometer"; // Warning you must change the potentiometer() method if you change this.
 String motorSpeedStr = "DC Motor Speed";
 String slotSensorStr = "Slot Sensor";
@@ -78,7 +80,7 @@ PVector servoIn    = new PVector(600, 640);
 
 
 void setup () {
-  POT_KNOB_MAX *= 0.6666666f;
+  //POT_KNOB_MAX *= 0.6666666f;
   SERVO_KNOB_MAX *= 0.75f;
   SERVO_KNOB_MAX *= 2.0f;
   size(1280, 720);
@@ -88,12 +90,12 @@ void setup () {
   cp5 = new ControlP5(this);
 
   potKnob = cp5.addKnob(potNameStr)
-    .setRange(POT_KNOB_MIN, POT_KNOB_MAX)
+    .setRange(POT_KNOB_MAX, POT_KNOB_MIN)
     .setValue(50)
     .setPosition(potPos.x, potPos.y)
     .setRadius(50)
     .setDragDirection(Knob.VERTICAL)
-    .setConstrained(false)
+    //.setConstrained(false)
     ;
   cp5.getController(potNameStr).lock();
   servoKnob = cp5.addKnob(servoStr)
@@ -167,16 +169,17 @@ void setup () {
     println("Warning: Couldn't connect to the Arduino! Are you running the program with sudo?");
     serialDetected = false;
   }
-
   // set initial background:
   background(0);
 }
 
 void draw () {
+  
   if (switchStateNeedsFired) {
     if (System.nanoTime() - switchStateTime > SWITCH_STATE_DELAY) {
         myPort.write(switchStateSaveStr);
         switchStateNeedsFired = false;
+        
       }
   }
   //text(cp5.get(Textfield.class,slotSensorStr).getText(), 360,130);
@@ -239,7 +242,7 @@ void drawPolarPlot(float x, float y, float plotWidth, float plotHeight) {
   line(-plotHeight*0.5, 0.0, plotHeight*0.5, 0.0);
   line(0.0, -plotHeight*0.5, 0.0, plotHeight*0.5);
   // Apply acceleration and velocity to angle (r remains static in this example)
-  stepperTheta += theta_vel;
+  //stepperTheta += theta_vel;
   if (abs(stepperTheta) > 10.0) {
     theta_vel = -theta_vel;
   }
@@ -253,20 +256,24 @@ void controlEvent(ControlEvent theEvent) {
     //  +theEvent.getName()+"': "
     //  +theEvent.getStringValue()
     //  );
-    // If setting the stepper motor value
+    // If setting the DC motor value
     if (theEvent.getName().equals(motorSpeedStr)) {
       if (state != DC_STATE) {
         setState(DC_STATE);
+        myPort.write("v0\n");
       }
 
       String str = theEvent.getStringValue();
+      println(str.length());
+        //println("EMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTY\nEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTY\nEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTY\nEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTY\nEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTY");
+      //}
       str = str.replaceAll("[^-0-9]", "");
       if (!str.equals("") && serialDetected) {
         str = "a" + String.valueOf(Integer.parseInt(str)) + "\n";
         switchStateSaveStr = str;
         myPort.write(str);
       }
-    }
+    }  
     // If setting the stepper motor value
     if (theEvent.getName().equals(stepperInStr)) {
       if (state != STEPPER_STATE) {
@@ -277,23 +284,23 @@ void controlEvent(ControlEvent theEvent) {
       str = str.replaceAll("[^-0-9]", "st");
       //println(str);
       if (!str.equals("") && serialDetected) {
-        str = "a" + String.valueOf(int(Float.parseFloat(str)*3200.0/360.0)) + "\n";
+        str = "a" + String.valueOf(int(Float.parseFloat(str))) + "\n";
         switchStateSaveStr = str;
         myPort.write(str);
       }
     }
   }
 }
-void Potentiometer(int theValue) {
-  int knobRealMax = int(1.3333f*float(POT_KNOB_MAX));
-  int knobRange = abs(knobRealMax - POT_KNOB_MIN);
-  if (knobRealMax < theValue) {
-    potKnob.setValue(theValue - knobRange);
-  } else if (theValue < POT_KNOB_MIN) {
-    potKnob.setValue(theValue + knobRange);
-  }
-  //println("a knob event. setting background to "+theValue);
-}
+//void Potentiometer(int theValue) {
+//  int knobRealMax = int(1.3333f*float(POT_KNOB_MAX));
+//  int knobRange = abs(knobRealMax - POT_KNOB_MIN);
+//  if (knobRealMax < theValue) {
+//    potKnob.setValue(theValue - knobRange);
+//  } else if (theValue < POT_KNOB_MIN) {
+//    potKnob.setValue(theValue + knobRange);
+//  }
+//  //println("a knob event. setting background to "+theValue);
+//}
 void Servo(int theServoValue) {
   int knobRealMax = int(0.5f*1.3333f*float(SERVO_KNOB_MAX)) + 1;
   int knobRange = abs(knobRealMax - SERVO_KNOB_MIN);
@@ -304,9 +311,6 @@ void Servo(int theServoValue) {
     servoKnob.setValue(SERVO_KNOB_MIN);
   }  
   settingServoKnob = true;
-}
-void Stepper_Position() {
-  println("Clicked");
 }
 void mouseClicked() {
 }
@@ -366,6 +370,10 @@ void serialEvent (Serial myPort) {
         slotButton.setCaptionLabel("Slot Blocked.");
         slotButton.setColorBackground(color(255, 0, 0));
       }
+      stepperTheta = radians(sensorValues.getStepperEncoder());
+      receivingSerial = true;
+      //servoKnob.setValue(sensorValues.getServoEncoder());
+      
     }
     // get the ASCII string:
     //String inString = myPort.readStringUntil('\n');
