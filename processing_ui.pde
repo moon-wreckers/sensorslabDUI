@@ -259,8 +259,8 @@ void controlEvent(ControlEvent theEvent) {
     // If setting the DC motor value
     if (theEvent.getName().equals(motorSpeedStr)) {
       if (state != DC_STATE) {
+        //myPort.write("v1\n");
         setState(DC_STATE);
-        myPort.write("v0\n");
       }
 
       String str = theEvent.getStringValue();
