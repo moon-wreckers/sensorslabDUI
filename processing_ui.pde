@@ -70,19 +70,22 @@ String distStr             = "IR Distance";
 String servoStr            = "Servo";
 
 // Positions of each of the UI elements
-PVector potPos        = new PVector(100, 50);
-PVector slotPos       = new PVector( 50, 250);
-PVector buttonPos     = new PVector( 50, 350);
-PVector dcMotorPos    = new PVector( 50, 50);
-PVector dcInPos       = new PVector( 50, 650);
-PVector dcSpeedPos    = new PVector(275, 650);
-PVector dcPositionPos = new PVector(275, 675);
-PVector bendyPos      = new PVector(543, 50);
-PVector stepperPos    = new PVector(640, 360);
-PVector stepperIn     = new PVector(543, 180);
-PVector distPos       = new PVector(950, 50);
-PVector servoPos      = new PVector(980, 300);
-PVector servoIn       = new PVector(600, 640);
+PVector potPos          = new PVector(100,  50);
+PVector slotPos         = new PVector( 50, 250);
+PVector buttonPos       = new PVector( 50, 350);
+PVector dcMotorPos      = new PVector( 50,  50);
+PVector dcInPos         = new PVector( 50, 650);
+PVector dcSpeedPos      = new PVector(275, 650);
+PVector dcPositionPos   = new PVector(275, 675);
+PVector servoStatePos   = new PVector(375, 650);
+PVector stepperStatePos = new PVector(375, 675);
+PVector dcStatePos      = new PVector(375, 700);
+PVector bendyPos        = new PVector(543,  50);
+PVector stepperPos      = new PVector(640, 360);
+PVector stepperIn       = new PVector(543, 180);
+PVector distPos         = new PVector(950,  50);
+PVector servoPos        = new PVector(980, 300);
+PVector servoIn         = new PVector(600, 640);
 
 
 void setup () {
@@ -280,7 +283,6 @@ void controlEvent(ControlEvent theEvent) {
 
       String str = theEvent.getStringValue();
       println(str.length());
-        //println("EMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTY\nEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTY\nEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTY\nEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTY\nEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTYEMPTY");
       //}
       str = str.replaceAll("[^-0-9]", "");
       if (!str.equals("") && serialDetected) {
@@ -310,17 +312,18 @@ void controlEvent(ControlEvent theEvent) {
       //println("Position Button!");
       dcPositionButton.setColorBackground(dcPositionButton.getColor().getForeground());
       dcSpeedButton.setColorBackground(buttonColor);
-      if (serialDetected) {
+      //if (serialDetected) {
         myPort.write("v0\n");
-      }
+      //}
     }
     else if (theEvent.getName().equals(dcSpeedButtonStr)) {
       //println("Speed Button!");
       dcSpeedButton.setColorBackground(dcSpeedButton.getColor().getForeground());
       dcPositionButton.setColorBackground(buttonColor);
-      if (serialDetected) {
-        myPort.write("v0\n");
-      }
+      //if (serialDetected) {
+        myPort.write("v1\n");
+        println("Setting to v1 mode!");
+      //}
     }
   }
 }
