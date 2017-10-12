@@ -304,6 +304,20 @@ void controlEvent(ControlEvent theEvent) {
       }
     }
   }
+  else if (theEvent.isAssignableFrom(Button.class)) {
+    if (theEvent.getName().equals(dcPositionButtonStr)) {
+      //println("Position Button!");
+      if (serialDetected) {
+        myPort.write("v0\n");
+      }
+    }
+    else if (theEvent.getName().equals(dcSpeedButtonStr)) {
+      //println("Speed Button!");
+      if (serialDetected) {
+        myPort.write("v0\n");
+      }
+    }
+  }
 }
 //void Potentiometer(int theValue) {
 //  int knobRealMax = int(1.3333f*float(POT_KNOB_MAX));
