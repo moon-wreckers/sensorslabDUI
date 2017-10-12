@@ -129,6 +129,7 @@ void setup () {
     .setPosition(dcPositionPos.x, dcPositionPos.y)
     .setSize(int(textBoxSize.x/4.0), int(textBoxSize.y/2.0))
     .updateSize();
+  dcPositionButton.setColorBackground(dcPositionButton.getColor().getForeground());
   dcSpeedButton = cp5.addButton(dcSpeedButtonStr)
     .setPosition(dcSpeedPos.x, dcSpeedPos.y)
     .setSize(int(textBoxSize.x/4.0), int(textBoxSize.y/2.0))
@@ -307,12 +308,16 @@ void controlEvent(ControlEvent theEvent) {
   else if (theEvent.isAssignableFrom(Button.class)) {
     if (theEvent.getName().equals(dcPositionButtonStr)) {
       //println("Position Button!");
+      dcPositionButton.setColorBackground(dcPositionButton.getColor().getForeground());
+      dcSpeedButton.setColorBackground(buttonColor);
       if (serialDetected) {
         myPort.write("v0\n");
       }
     }
     else if (theEvent.getName().equals(dcSpeedButtonStr)) {
       //println("Speed Button!");
+      dcSpeedButton.setColorBackground(dcSpeedButton.getColor().getForeground());
+      dcPositionButton.setColorBackground(buttonColor);
       if (serialDetected) {
         myPort.write("v0\n");
       }
