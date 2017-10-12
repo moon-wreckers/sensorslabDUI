@@ -322,8 +322,13 @@ void controlEvent(ControlEvent theEvent) {
       dcPositionButton.setColorBackground(buttonColor);
       //if (serialDetected) {
         myPort.write("v1\n");
-        println("Setting to v1 mode!");
+        //println("Setting to v1 mode!");
       //}
+    }
+    else if (theEvent.getName().equals(buttonStr)) {
+      //int background =  
+      //if ( == dcSpeedButton.getColor().getForeground())
+        myPort.write("p1\n");
     }
   }
 }
@@ -571,6 +576,9 @@ public class SensorValues {
     println("Servo Encoder:..." + String.valueOf(this.getServoEncoder()));
     println("Stepper Encoder: " + String.valueOf(this.getStepperEncoder()));
     println("DC Encoder:......" + String.valueOf(this.getDcEncoder()));
-    println("DC Voltage:      " + String.valueOf(this.getDcVoltage()));
+    if (this.getDcVoltage() < 250) {
+      println("DC Motor Speed:  " + String.valueOf(this.getDcVoltage()) + " deg/s");
+    }
+    else println("DC Motor Speed:  0 deg/s");
   }
 }
