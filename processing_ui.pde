@@ -32,6 +32,11 @@ int SERVO_KNOB_MAX = 179;
 int SERVO_STATE = 0;
 int STEPPER_STATE = 1;
 int DC_STATE = 2;
+long switchStateTime;
+boolean switchStateNeedsFired = false;
+String switchStateSaveStr;
+long SWITCH_STATE_DELAY = 300000000L;
+int previousState = -1;
 
 int buttonColor;
 
@@ -168,7 +173,12 @@ void setup () {
 }
 
 void draw () {
-
+  if (switchStateNeedsFired) {
+    if (System.nanoTime() - switchStateTime > SWITCH_STATE_DELAY) {
+        myPort.write(switchStateSaveStr);
+        switchStateNeedsFired = false;
+      }
+  }
   //text(cp5.get(Textfield.class,slotSensorStr).getText(), 360,130);
   //text(cp5.get(Textfield.class,motorSpeedStr).getText(), 360,130);
 
@@ -253,6 +263,7 @@ void controlEvent(ControlEvent theEvent) {
       str = str.replaceAll("[^-0-9]", "");
       if (!str.equals("") && serialDetected) {
         str = "a" + String.valueOf(Integer.parseInt(str)) + "\n";
+        switchStateSaveStr = str;
         myPort.write(str);
       }
     }
@@ -267,6 +278,7 @@ void controlEvent(ControlEvent theEvent) {
       //println(str);
       if (!str.equals("") && serialDetected) {
         str = "a" + String.valueOf(int(Float.parseFloat(str)*3200.0/360.0)) + "\n";
+        switchStateSaveStr = str;
         myPort.write(str);
       }
     }
@@ -307,11 +319,16 @@ void mouseReleased() {
         setState(SERVO_STATE);
       }
       String outString = "a" + String.valueOf(servoKnob.getValue()) + "\n";
+        switchStateSaveStr = outString;
       myPort.write(outString);
     }
   }
 }
 void setState(int newState) {
+  if (newState != previousState) {
+    switchStateTime = System.nanoTime();
+    switchStateNeedsFired = true;
+  }
   //print("Change state Detected."); println(newState);
   if (serialDetected) {
     String outString = "s" + String.valueOf(newState) + "\n";
@@ -320,6 +337,7 @@ void setState(int newState) {
     myPort.write(str);
   }
   state = newState;
+  previousState = newState;
 }
 
 void keyPressed() {
